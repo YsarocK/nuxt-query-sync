@@ -46,8 +46,7 @@ To use this module in your Nuxt application, follow these steps:
 To persist a `Ref` in the URL query parameters, use the `usePersistence` function. You need to provide a `key` which will be used as the query parameter key.
 
 ```javascript
-import { ref } from 'vue';
-import usePersistence from 'vue-persistence-module';
+import usePersistence from 'nuxt-query-sync';
 
 const count = ref(0);
 usePersistence(count, 'count');
@@ -60,8 +59,7 @@ In this example, the `count` `Ref` will be synchronized with the `count` query p
 To persist a `Reactive` object, simply pass it to `usePersistence` without a `key`. The keys of the `Reactive` object will be used as query parameter keys.
 
 ```typescript
-import { reactive } from 'vue';
-import usePersistence from 'vue-persistence-module';
+import usePersistence from 'nuxt-query-sync';
 
 const state = reactive({ name: 'John', age: 30 });
 usePersistence(state);
@@ -84,8 +82,7 @@ Here, the `state` object will be synchronized with corresponding query parameter
 ## Example
 
 ```typescript
-import { ref, reactive } from 'vue';
-import usePersistence from 'vue-persistence-module';
+import usePersistence from 'nuxt-query-sync';
 
 // Example with Ref
 const count = ref(0);
