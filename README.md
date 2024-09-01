@@ -52,7 +52,7 @@ const count = ref(0);
 usePersistence(count, 'count');
 ```
 
-In this example, the `count` `Ref` will be synchronized with the `count` query parameter. Any changes to `count` will update the URL, and any changes to the URL will update `count`.
+In this example, the `count` `Ref` will be synchronized with the `count` query parameter. Any changes to `count` will update the URL.
 
 ### With `Reactive`
 
