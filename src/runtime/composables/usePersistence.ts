@@ -38,14 +38,14 @@ function usePersistence<T extends Ref<any> | Reactive<any>>(item: T, key?: strin
   if (isRef(item)) {
     itemType.value = 'ref';
 
-    if (route.query[key || 'test']) {
-      item.value = route.query[key || 'test'] as UnwrapRef<T>;
+    if (route.query[key]) {
+      item.value = route.query[key] as UnwrapRef<T>;
     }
 
     watch(item, () => {
       const newQ = {
         ...route.query,
-        [key || 'test']: JSON.parse(JSON.stringify(item.value))
+        [key]: JSON.parse(JSON.stringify(item.value))
       };
 
       router.push({ query: newQ });
