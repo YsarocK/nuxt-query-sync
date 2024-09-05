@@ -1,6 +1,7 @@
 import type { Ref, UnwrapRef, Reactive } from "vue";
 import consola from "consola";
 import { flattenObject, unflattenObject } from "./utils";
+import { isRef, isReactive, ref, watch, useRouter, useRoute } from "#imports";
 
 /**
  * A utility function that persists a Vue `Ref` or `Reactive` object in the URL query parameters.
@@ -37,6 +38,11 @@ function usePersistence<T extends Ref<any> | Reactive<any>>(item: T, key?: strin
 
   if (isRef(item)) {
     itemType.value = 'ref';
+
+    if(!key) {
+      consola.warn('usePersistence expects a key as second parameter when using with a Ref');
+      return item;
+    }
 
     if (route.query[key]) {
       item.value = route.query[key] as UnwrapRef<T>;
