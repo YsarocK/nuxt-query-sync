@@ -3,33 +3,6 @@ import consola from "consola";
 import { flattenObject, unflattenObject } from "./utils";
 import { isRef, isReactive, ref, watch, useRouter, useRoute } from "#imports";
 
-/**
- * A utility function that persists a Vue `Ref` or `Reactive` object in the URL query parameters.
- * The function will automatically update the query parameters when the value of the `Ref` or `Reactive` changes,
- * and will update the `Ref` or `Reactive` object with values from the query parameters if they exist on initial load.
- *
- * @template T - The type of the item, which can be either a `Ref` or a `Reactive` object.
- * 
- * @param {T} item - The Vue `Ref` or `Reactive` object that should be persisted in the URL query parameters.
- * @param {string} [key] - The key under which the value should be stored in the query parameters. 
- *                         This parameter is required if the item is a `Ref`. If the item is a `Reactive` object, 
- *                         it should not be provided, and the object's keys will be used as query parameter keys.
- * 
- * @returns {T} - Returns the original `Ref` or `Reactive` object after applying the persistence logic.
- * 
- * @throws {Warning} - Throws a warning if a `Ref` is provided without a `key`, or if an unsupported type is provided.
- * 
- * @example
- * // Using with a Ref
- * const count = ref(0);
- * usePersistence(count, "count"); // The value of count will be synced with the "count" query parameter.
- *
- * @example
- * // Using with a Reactive object
- * const state = reactive({ name: 'John', age: 30 });
- * usePersistence(state); // The values of state will be synced with the corresponding query parameters.
- */
-
 function usePersistence<T extends Ref<any> | Reactive<any>>(item: T, key?: string): T {
   const router = useRouter();
   const route = useRoute();
@@ -39,23 +12,33 @@ function usePersistence<T extends Ref<any> | Reactive<any>>(item: T, key?: strin
   if (isRef(item)) {
     itemType.value = 'ref';
 
-    if(!key) {
+    if (!key) {
       consola.warn('usePersistence expects a key as second parameter when using with a Ref');
       return item;
     }
 
+    // Initialisation depuis l'URL en traitant le JSON encodé
     if (route.query[key]) {
-      item.value = route.query[key] as UnwrapRef<T>;
+      try {
+        item.value = JSON.parse(route.query[key] as string);
+      } catch (error) {
+        consola.warn(`Failed to parse query parameter for ${key}:`, error);
+      }
     }
 
-    watch(item, () => {
-      const newQ = {
-        ...route.query,
-        [key]: JSON.parse(JSON.stringify(item.value))
-      };
+    // Watch pour détecter les changements dans le ref
+    watch(
+      item,
+      () => {
+        const newQ = {
+          ...route.query,
+          [key]: JSON.stringify(item.value), // Encode l'ensemble du tableau en JSON
+        };
 
-      router.push({ query: newQ });
-    }, { deep: true });
+        router.push({ query: newQ });
+      },
+      { deep: true }
+    );
   }
 
   if (isReactive(item)) {
@@ -66,7 +49,11 @@ function usePersistence<T extends Ref<any> | Reactive<any>>(item: T, key?: strin
     const initialValues = flattenObject(route.query);
     for (const k in initialValues) {
       if (k in lastValue.value) {
-        lastValue.value[k] = initialValues[k];
+        try {
+          lastValue.value[k] = JSON.parse(initialValues[k] as string);
+        } catch (error) {
+          consola.warn(`Failed to parse query parameter for ${k}:`, error);
+        }
       }
     }
 
@@ -80,7 +67,7 @@ function usePersistence<T extends Ref<any> | Reactive<any>>(item: T, key?: strin
 
         for (const key in flatNewValue) {
           if (flatNewValue[key] !== lastValue.value[key]) {
-            changes[key] = flatNewValue[key];
+            changes[key] = JSON.stringify(flatNewValue[key]);
           }
         }
 
@@ -92,7 +79,7 @@ function usePersistence<T extends Ref<any> | Reactive<any>>(item: T, key?: strin
 
         const newQ = {
           ...route.query,
-          ...changes
+          ...changes,
         };
 
         router.push({ query: newQ });
